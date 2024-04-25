@@ -406,6 +406,8 @@ export default ({
     if (capsules !== undefined) {
       capsulesRef.current = capsules;
 
+      console.log("capsulesRef.current", capsulesRef.current);
+
       setActive(true);
     }
   }, [capsules]);
@@ -421,13 +423,7 @@ export default ({
   const animID = React.useRef<string>();
 
   React.useEffect(() => {
-    if (
-      canvasRef.current &&
-      trackAnalysis &&
-      (capsulesRef.current === undefined ||
-        capsulesRef.current === null ||
-        capsulesRef.current.length === 0)
-    ) {
+    if (canvasRef.current) {
       ctxRef.current = canvasRef.current.getContext("2d");
 
       if (ctxRef.current === null) return;
@@ -489,16 +485,8 @@ export default ({
       }
 
       setCapsules(capsules);
-
-      if (!animationManager) {
-        const anim = new AnimationManager();
-        animID.current = anim.addOnAnimateListener(update);
-        setAnimationManager(anim);
-      }
     }
-
-    return () => {};
-  }, [canvasRef, trackAnalysis]);
+  }, [canvasRef.current]);
 
   React.useEffect(() => {
     activeRef.current = active;
@@ -522,6 +510,12 @@ export default ({
     menuShowingRef.current = menuShowing;
   }, [menuShowing]);
 
+  const trackAnalysisRef = React.useRef(trackAnalysis);
+  React.useEffect(() => {
+    console.log("trackAnalysis", trackAnalysis);
+    trackAnalysisRef.current = trackAnalysis;
+  }, [trackAnalysis]);
+
   const onEscapeDown = (e) => {
     if (e.key === "Escape") {
       setMenuShowing(!menuShowingRef.current);
@@ -530,6 +524,12 @@ export default ({
 
   React.useEffect(() => {
     window.addEventListener("keydown", onEscapeDown);
+
+    if (!animationManager) {
+      const anim = new AnimationManager();
+      animID.current = anim.addOnAnimateListener(update);
+      setAnimationManager(anim);
+    }
 
     return () => {
       window.removeEventListener("keydown", onEscapeDown);
@@ -584,7 +584,7 @@ export default ({
         paused = (await player.getCurrentState())?.paused ?? true;
       }
 
-      if (trackAnalysis && player && !paused) {
+      if (trackAnalysisRef.current && player && !paused) {
         const state = await player.getCurrentState();
 
         if (!state) return;
@@ -604,12 +604,12 @@ export default ({
         }
 
         const beatsAnalysis = findCurrentPropertyFromTime(
-          trackAnalysis,
+          trackAnalysisRef.current,
           "beats",
           currentTimeS
         );
         const segmentAnalysis = findCurrentPropertyFromTime(
-          trackAnalysis,
+          trackAnalysisRef.current,
           "segments",
           currentTimeS
         );
@@ -691,7 +691,7 @@ export default ({
             // capsule.energy = Tools.random(0.5, 1) * combinedEnergy;
 
             capsule.data["shouldLerpEnergy"] = false;
-            capsule.energy = 1;
+            capsule.energy = combinedEnergy;
           }
         }
 
@@ -769,14 +769,17 @@ export default ({
         //     }
         //   }
         // });
-      } else if (!trackAnalysis || !player) {
+      } else if (!trackAnalysisRef.current || !player) {
         capsulesRef.current.forEach((c) => {
-          c.data["shouldLerpEnergy"] = true;
-          c.energy = Tools.lerpFactor(c.energy, 0, 0.01);
+          c.data["shouldLerpEnergy"] = false;
+          c.energy = 1;
         });
       }
 
-      if (!canvasRef.current) return;
+      if (!canvasRef.current) {
+        console.log("No canvas");
+        return;
+      }
 
       // Clear the canvas
       ctxRef.current.clearRect(
@@ -791,12 +794,10 @@ export default ({
       for (let j = 0; j < capsulesRef.current.length; j++) {
         capsule = capsulesRef.current[j];
 
-        if (trackAnalysis && player) {
-          if (capsule.data["shouldLerpEnergy"]) {
-            capsule.energy = Tools.lerpFactor(capsule.energy, 0, 0.01);
-          } else {
-            capsule.data["shouldLerpEnergy"] = true;
-          }
+        if (capsule.data["shouldLerpEnergy"]) {
+          capsule.energy = Tools.lerpFactor(capsule.energy, 0, 0.01);
+        } else if (trackAnalysisRef.current && player) {
+          capsule.data["shouldLerpEnergy"] = true;
         }
 
         // recycle capsules

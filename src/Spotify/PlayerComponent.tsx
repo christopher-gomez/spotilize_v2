@@ -771,461 +771,232 @@ export const SpotifyPlayer = ({
   return (
     <>
       {player && (
-        <div className="controls" id="player-controls">
-          {displayControls && (
-            <InactivityFader
-              shouldGoTransparent={() => {
-                return (
-                  playbackTransferredRef.current &&
-                  !playerStateRef.current.isPaused &&
-                  !detailsOpenRef.current
-                );
-              }}
-            >
-              <Draggable
-                disabled={!canDrag}
-                scale={1}
-                bounds="body"
-                defaultPosition={defaultPosition}
-                position={defaultPosition}
-                onStop={(x, data) => {
-                  setDefaultPosition({ x: data.x, y: data.y });
+        <>
+          <div className="controls" id="player-controls">
+            {displayControls && (
+              <InactivityFader
+                shouldGoTransparent={() => {
+                  return (
+                    playbackTransferredRef.current &&
+                    !playerStateRef.current.isPaused &&
+                    !detailsOpenRef.current
+                  );
                 }}
               >
-                <div
-                  ref={controlsRef}
-                  className={`inner-container ${
-                    canDrag ? "draggable-cursor" : ""
-                  }`}
-                  style={{
-                    zIndex: PLAYER_CONTROLS_ZINDEX,
-                    position: "absolute",
-                    bottom: "5em",
-                    opacity:
-                      (shouldRenderControls !== undefined &&
-                        !shouldRenderControls) ||
-                      !playerID ||
-                      requestingTransfer ||
-                      (!requestingTransfer &&
-                        playbackTransferred &&
-                        !firstTrackPlayed)
-                        ? 0
-                        : 1,
-                    pointerEvents:
-                      (shouldRenderControls !== undefined &&
-                        !shouldRenderControls) ||
-                      requestingTransfer
-                        ? "none"
-                        : "inherit",
-                    minWidth: width,
-                    maxWidth: width,
+                <Draggable
+                  disabled={!canDrag}
+                  scale={1}
+                  bounds="body"
+                  defaultPosition={defaultPosition}
+                  position={defaultPosition}
+                  onStop={(x, data) => {
+                    setDefaultPosition({ x: data.x, y: data.y });
                   }}
                 >
-                  {playbackTransferred &&
-                    firstTrackPlayed &&
-                    playerState.track && (
-                      <div
-                        style={{
-                          display: "flex",
-                          flexFlow: "column",
-                          width: "100%",
-                          maxWidth: "100%",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <Accordion
-                          onChange={(e, ex) => {
-                            if (!ex) setPlayerDetailViewNum(0);
-                          }}
-                          sx={{
+                  <div
+                    ref={controlsRef}
+                    className={`inner-container ${
+                      canDrag ? "draggable-cursor" : ""
+                    }`}
+                    style={{
+                      zIndex: PLAYER_CONTROLS_ZINDEX,
+                      position: "absolute",
+                      bottom: "5em",
+                      opacity:
+                        (shouldRenderControls !== undefined &&
+                          !shouldRenderControls) ||
+                        !playerID ||
+                        requestingTransfer ||
+                        (!requestingTransfer &&
+                          playbackTransferred &&
+                          !firstTrackPlayed)
+                          ? 0
+                          : 1,
+                      pointerEvents:
+                        (shouldRenderControls !== undefined &&
+                          !shouldRenderControls) ||
+                        requestingTransfer
+                          ? "none"
+                          : "inherit",
+                      minWidth: width,
+                      maxWidth: width,
+                    }}
+                  >
+                    {playbackTransferred &&
+                      firstTrackPlayed &&
+                      playerState.track && (
+                        <div
+                          style={{
+                            display: "flex",
+                            flexFlow: "column",
                             width: "100%",
                             maxWidth: "100%",
-                            backgroundColor: "transparent !important",
-                            margin: 0,
-                            padding: 0,
-                            marginBottom: 0,
+                            justifyContent: "center",
+                            alignItems: "center",
                           }}
-                          aria-controls="panel1a-content"
-                          expanded={detailsOpen}
                         >
-                          <AccordionActions
-                            sx={{
-                              backgroundColor: "transparent !important",
-                              padding: "0 !important",
-                              justifyContent: "space-between !important",
+                          <Accordion
+                            onChange={(e, ex) => {
+                              if (!ex) setPlayerDetailViewNum(0);
                             }}
+                            sx={{
+                              width: "100%",
+                              maxWidth: "100%",
+                              backgroundColor: "transparent !important",
+                              margin: 0,
+                              padding: 0,
+                              marginBottom: 0,
+                            }}
+                            aria-controls="panel1a-content"
+                            expanded={detailsOpen}
                           >
-                            <RouteMenuButton
-                              noMove={true}
-                              onClick={() => setCanDrag(!canDrag)}
-                              style={{
-                                padding: "2px 12px",
-                                margin: "0 8px",
+                            <AccordionActions
+                              sx={{
+                                backgroundColor: "transparent !important",
+                                padding: "0 !important",
+                                justifyContent: "space-between !important",
+                              }}
+                            >
+                              <RouteMenuButton
+                                noMove={true}
+                                onClick={() => setCanDrag(!canDrag)}
+                                style={{
+                                  padding: "2px 12px",
+                                  margin: "0 8px",
+                                  display: "flex",
+                                  color: "white",
+                                  marginBottom: "6px",
+                                }}
+                              >
+                                <>
+                                  {canDrag === true && <LockOpenIcon />}
+                                  {canDrag === false && <LockIcon />}
+                                </>
+                              </RouteMenuButton>
+                              <RouteMenuButton
+                                noMove={true}
+                                onClick={() => setDetailsOpen(!detailsOpen)}
+                                style={{
+                                  padding: "2px 12px",
+                                  margin: "0 8px",
+                                  display: "flex",
+                                  color: "white",
+                                  marginBottom: "6px",
+                                }}
+                              >
+                                <>
+                                  {detailsOpen === true && <ExpandMoreIcon />}
+                                  {detailsOpen === false && <ExpandLessIcon />}
+                                </>
+                              </RouteMenuButton>
+                            </AccordionActions>
+                            <AccordionDetails
+                              sx={{
+                                backgroundColor: "transparent !important",
+                                paddingBottom: 0,
                                 display: "flex",
-                                color: "white",
-                                marginBottom: "6px",
+                                flexFlow: "column",
+                                justifyItems: "center",
+                                alignItems: "center",
                               }}
                             >
                               <>
-                                {canDrag === true && <LockOpenIcon />}
-                                {canDrag === false && <LockIcon />}
-                              </>
-                            </RouteMenuButton>
-                            <RouteMenuButton
-                              noMove={true}
-                              onClick={() => setDetailsOpen(!detailsOpen)}
-                              style={{
-                                padding: "2px 12px",
-                                margin: "0 8px",
-                                display: "flex",
-                                color: "white",
-                                marginBottom: "6px",
-                              }}
-                            >
-                              <>
-                                {detailsOpen === true && <ExpandMoreIcon />}
-                                {detailsOpen === false && <ExpandLessIcon />}
-                              </>
-                            </RouteMenuButton>
-                          </AccordionActions>
-                          <AccordionDetails
-                            sx={{
-                              backgroundColor: "transparent !important",
-                              paddingBottom: 0,
-                              display: "flex",
-                              flexFlow: "column",
-                              justifyItems: "center",
-                              alignItems: "center",
-                            }}
-                          >
-                            <>
-                              {playerDetailViewNum === 0 && (
-                                <CurrentTrackInfoComponent
-                                  showArtist={false}
-                                  showTitle={false}
-                                  token={tokenRef.current!}
-                                  trackURI={playerState.track.uri}
-                                />
-                              )}
-                              {playerDetailViewNum === 1 &&
-                                (userLib || userPlaylists) && (
-                                  <>
-                                    <>
-                                      <div style={{ position: "relative" }}>
-                                        <input
-                                          ref={inputRef}
-                                          type="text"
-                                          id="search"
-                                          name="search"
-                                          placeholder=" "
-                                          autoComplete="off"
-                                          onInput={(e) => {
-                                            if (typingTimeoutRef.current) {
-                                              clearTimeout(
-                                                typingTimeoutRef.current
-                                              );
-                                            }
-                                            typingTimeoutRef.current =
-                                              window.setTimeout(() => {
-                                                search(
-                                                  (e.target as HTMLInputElement)
-                                                    .value
-                                                );
-                                              }, 1000);
-                                          }}
-                                        />
-                                        <label htmlFor="search">Search</label>
-                                      </div>
-                                    </>
-                                    {userLib && (
-                                      <RouteMenuButton
-                                        noMove={true}
-                                        onClick={() => {
-                                          setPlayerDetailViewNum(2);
-                                        }}
-                                        style={{
-                                          color: "white",
-                                          marginBottom: 0,
-                                        }}
-                                      >
-                                        Liked Songs
-                                      </RouteMenuButton>
-                                    )}
-                                    {userPlaylists && (
-                                      <RouteMenuButton
-                                        noMove={true}
-                                        onClick={() => {
-                                          setPlayerDetailViewNum(3);
-                                        }}
-                                        style={{
-                                          color: "white",
-                                          marginBottom: 0,
-                                        }}
-                                      >
-                                        Playlists
-                                      </RouteMenuButton>
-                                    )}
-                                    {nowPlayingAnalysis && (
-                                      <RouteMenuButton
-                                        noMove={true}
-                                        onClick={() => {
-                                          setPlayerDetailViewNum(4);
-                                        }}
-                                        style={{
-                                          color: "white",
-                                          marginBottom: 0,
-                                        }}
-                                      >
-                                        Now Playing - Analysis
-                                      </RouteMenuButton>
-                                    )}
-                                    <RouteMenuButton
-                                      noMove={true}
-                                      onClick={() => {
-                                        setPlayerDetailViewNum(0);
-                                      }}
-                                      style={{
-                                        color: "white",
-                                        marginBottom: 0,
-                                      }}
-                                    >
-                                      Now Playing
-                                    </RouteMenuButton>
-                                  </>
+                                {playerDetailViewNum === 0 && (
+                                  <CurrentTrackInfoComponent
+                                    showArtist={false}
+                                    showTitle={false}
+                                    token={tokenRef.current!}
+                                    trackURI={playerState.track.uri}
+                                  />
                                 )}
-                              {playerDetailViewNum === 2 && userLib && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    flexFlow: "column",
-                                    maxHeight: 200,
-                                    maxWidth: "100%",
-                                    width: "100%",
-                                    overflowY: "scroll",
-                                    justifyContent: "flex-start",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <Typography color="white" variant="h5">
-                                    Liked Songs
-                                    {tracksPagination && (
-                                      <span>
-                                        <small>
-                                          {tracksPagination.currentPage} /{" "}
-                                          {tracksPagination.totalPages}
-                                        </small>
-                                      </span>
-                                    )}
-                                  </Typography>
-                                  {userLib?.previous && !fetchingLib && (
-                                    <RouteMenuButton
-                                      noMove={true}
-                                      onClick={() => {
-                                        fetchUserTracks(
-                                          userLib.offset - userLib.limit
-                                        );
-                                      }}
-                                      key={"user-track-prev"}
-                                      style={{
-                                        color: "white",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        maxHeight: 100,
-                                        minHeight: 10,
-                                        paddingTop: 15,
-                                        maxWidth: "40%",
-                                        minWidth: "40%",
-                                        paddingBottom: 20,
-                                        justifyContent: "center",
-                                        marginTop: 5,
-                                        marginBottom: 5,
-                                      }}
-                                    >
-                                      Less...
-                                    </RouteMenuButton>
-                                  )}
-                                  {!fetchingLib &&
-                                    userLib.items?.map((i) => (
+                                {playerDetailViewNum === 1 &&
+                                  (userLib || userPlaylists) && (
+                                    <>
+                                      <>
+                                        <div style={{ position: "relative" }}>
+                                          <input
+                                            ref={inputRef}
+                                            type="text"
+                                            id="search"
+                                            name="search"
+                                            placeholder=" "
+                                            autoComplete="off"
+                                            onInput={(e) => {
+                                              if (typingTimeoutRef.current) {
+                                                clearTimeout(
+                                                  typingTimeoutRef.current
+                                                );
+                                              }
+                                              typingTimeoutRef.current =
+                                                window.setTimeout(() => {
+                                                  search(
+                                                    (
+                                                      e.target as HTMLInputElement
+                                                    ).value
+                                                  );
+                                                }, 1000);
+                                            }}
+                                          />
+                                          <label htmlFor="search">Search</label>
+                                        </div>
+                                      </>
+                                      {userLib && (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            setPlayerDetailViewNum(2);
+                                          }}
+                                          style={{
+                                            color: "white",
+                                            marginBottom: 0,
+                                          }}
+                                        >
+                                          Liked Songs
+                                        </RouteMenuButton>
+                                      )}
+                                      {userPlaylists && (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            setPlayerDetailViewNum(3);
+                                          }}
+                                          style={{
+                                            color: "white",
+                                            marginBottom: 0,
+                                          }}
+                                        >
+                                          Playlists
+                                        </RouteMenuButton>
+                                      )}
+                                      {nowPlayingAnalysis && (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            setPlayerDetailViewNum(4);
+                                          }}
+                                          style={{
+                                            color: "white",
+                                            marginBottom: 0,
+                                          }}
+                                        >
+                                          Now Playing - Analysis
+                                        </RouteMenuButton>
+                                      )}
                                       <RouteMenuButton
                                         noMove={true}
                                         onClick={() => {
-                                          if (i.track)
-                                            playTrack(
-                                              i.track.uri,
-                                              tokenRef.current
-                                            );
+                                          setPlayerDetailViewNum(0);
                                         }}
-                                        key={"liked-track-" + i.track.uri}
                                         style={{
                                           color: "white",
-                                          overflow: "hidden",
-                                          whiteSpace: "nowrap",
-                                          textOverflow: "ellipsis",
-                                          textAlign: "left",
-                                          maxHeight: 100,
-                                          minHeight: 10,
-                                          paddingTop: 15,
-                                          maxWidth: "70%",
-                                          minWidth: "70%",
-                                          paddingBottom: 20,
-                                          marginLeft: 0,
-                                          marginRight: 0,
-                                          paddingLeft: 20,
-                                          justifyContent: "flex-start",
-                                          marginTop: 5,
-                                          marginBottom: 5,
+                                          marginBottom: 0,
                                         }}
                                       >
-                                        {i.track.name}
+                                        Now Playing
                                       </RouteMenuButton>
-                                    ))}
-                                  {userLib?.next && !fetchingLib && (
-                                    <RouteMenuButton
-                                      noMove={true}
-                                      onClick={() => {
-                                        fetchUserTracks(
-                                          userLib.offset + userLib.limit
-                                        );
-                                      }}
-                                      key={"user-track-next"}
-                                      style={{
-                                        color: "white",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        maxHeight: 100,
-                                        minHeight: 10,
-                                        paddingTop: 15,
-                                        maxWidth: "40%",
-                                        minWidth: "40%",
-                                        paddingBottom: 20,
-                                        justifyContent: "center",
-                                        marginTop: 5,
-                                        marginBottom: 5,
-                                      }}
-                                    >
-                                      More...
-                                    </RouteMenuButton>
+                                    </>
                                   )}
-                                </div>
-                              )}
-                              {playerDetailViewNum === 3 && userPlaylists && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    flexFlow: "column",
-                                    maxHeight: 200,
-                                    maxWidth: "100%",
-                                    width: "100%",
-                                    overflowY: "scroll",
-                                    justifyContent: "flex-start",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <Typography color="white" variant="h5">
-                                    Playlists
-                                    {playlistPagination && (
-                                      <span>
-                                        {playlistPagination.currentPage} /{" "}
-                                        {playlistPagination.totalPages}
-                                      </span>
-                                    )}
-                                  </Typography>
-                                  {userPlaylists?.previous && !fetchingLib && (
-                                    <RouteMenuButton
-                                      noMove={true}
-                                      onClick={() => {
-                                        fetchUserPlaylists(
-                                          userPlaylists.offset -
-                                            userPlaylists.limit
-                                        );
-                                      }}
-                                      key={"user-playlist-prev"}
-                                      style={{
-                                        color: "white",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        maxHeight: 100,
-                                        minHeight: 10,
-                                        paddingTop: 15,
-                                        maxWidth: "40%",
-                                        minWidth: "40%",
-                                        paddingBottom: 20,
-                                        marginTop: 5,
-                                        marginBottom: 5,
-                                      }}
-                                    >
-                                      Less...
-                                    </RouteMenuButton>
-                                  )}
-                                  {!fetchingLib &&
-                                    userPlaylists.items?.map((i) => (
-                                      <RouteMenuButton
-                                        noMove={true}
-                                        onClick={() => {
-                                          if (i.uri)
-                                            playPlaylist(
-                                              i.uri,
-                                              tokenRef.current
-                                            );
-                                        }}
-                                        key={"user-playlist-" + i.uri}
-                                        style={{
-                                          color: "white",
-                                          overflow: "hidden",
-                                          whiteSpace: "nowrap",
-                                          textOverflow: "ellipsis",
-                                          textAlign: "left",
-                                          maxHeight: 100,
-                                          minHeight: 10,
-                                          paddingTop: 15,
-                                          maxWidth: "70%",
-                                          minWidth: "70%",
-                                          paddingBottom: 20,
-                                          paddingLeft: 20,
-                                          justifyContent: "flex-start",
-                                          marginTop: 5,
-                                          marginBottom: 5,
-                                        }}
-                                      >
-                                        {i.name}
-                                      </RouteMenuButton>
-                                    ))}
-                                  {userPlaylists?.previous && !fetchingLib && (
-                                    <RouteMenuButton
-                                      noMove={true}
-                                      onClick={() => {
-                                        fetchUserPlaylists(
-                                          userPlaylists.offset +
-                                            userPlaylists.limit
-                                        );
-                                      }}
-                                      key={"user-playlist-next"}
-                                      style={{
-                                        color: "white",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        maxHeight: 100,
-                                        minHeight: 10,
-                                        paddingTop: 15,
-                                        maxWidth: "40%",
-                                        minWidth: "40%",
-                                        paddingBottom: 20,
-                                        marginTop: 5,
-                                        marginBottom: 5,
-                                      }}
-                                    >
-                                      More...
-                                    </RouteMenuButton>
-                                  )}
-                                </div>
-                              )}
-                              {playerDetailViewNum === 4 &&
-                                nowPlayingAnalysis && (
+                                {playerDetailViewNum === 2 && userLib && (
                                   <div
                                     style={{
                                       display: "flex",
@@ -1239,148 +1010,411 @@ export const SpotifyPlayer = ({
                                     }}
                                   >
                                     <Typography color="white" variant="h5">
-                                      Analysis
-                                    </Typography>
-                                    <Typography
-                                      color="white"
-                                      sx={{ width: "100%", maxWidth: "100%" }}
-                                    >
-                                      {JSON.stringify(
-                                        nowPlayingAnalysis,
-                                        null,
-                                        2
+                                      Liked Songs
+                                      {tracksPagination && (
+                                        <span>
+                                          <small>
+                                            {tracksPagination.currentPage} /{" "}
+                                            {tracksPagination.totalPages}
+                                          </small>
+                                        </span>
                                       )}
                                     </Typography>
+                                    {userLib?.previous && !fetchingLib && (
+                                      <RouteMenuButton
+                                        noMove={true}
+                                        onClick={() => {
+                                          fetchUserTracks(
+                                            userLib.offset - userLib.limit
+                                          );
+                                        }}
+                                        key={"user-track-prev"}
+                                        style={{
+                                          color: "white",
+                                          overflow: "hidden",
+                                          whiteSpace: "nowrap",
+                                          textOverflow: "ellipsis",
+                                          maxHeight: 100,
+                                          minHeight: 10,
+                                          paddingTop: 15,
+                                          maxWidth: "40%",
+                                          minWidth: "40%",
+                                          paddingBottom: 20,
+                                          justifyContent: "center",
+                                          marginTop: 5,
+                                          marginBottom: 5,
+                                        }}
+                                      >
+                                        Less...
+                                      </RouteMenuButton>
+                                    )}
+                                    {!fetchingLib &&
+                                      userLib.items?.map((i) => (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            if (i.track)
+                                              playTrack(
+                                                i.track.uri,
+                                                tokenRef.current
+                                              );
+                                          }}
+                                          key={"liked-track-" + i.track.uri}
+                                          style={{
+                                            color: "white",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            textOverflow: "ellipsis",
+                                            textAlign: "left",
+                                            maxHeight: 100,
+                                            minHeight: 10,
+                                            paddingTop: 15,
+                                            maxWidth: "70%",
+                                            minWidth: "70%",
+                                            paddingBottom: 20,
+                                            marginLeft: 0,
+                                            marginRight: 0,
+                                            paddingLeft: 20,
+                                            justifyContent: "flex-start",
+                                            marginTop: 5,
+                                            marginBottom: 5,
+                                          }}
+                                        >
+                                          {i.track.name}
+                                        </RouteMenuButton>
+                                      ))}
+                                    {userLib?.next && !fetchingLib && (
+                                      <RouteMenuButton
+                                        noMove={true}
+                                        onClick={() => {
+                                          fetchUserTracks(
+                                            userLib.offset + userLib.limit
+                                          );
+                                        }}
+                                        key={"user-track-next"}
+                                        style={{
+                                          color: "white",
+                                          overflow: "hidden",
+                                          whiteSpace: "nowrap",
+                                          textOverflow: "ellipsis",
+                                          maxHeight: 100,
+                                          minHeight: 10,
+                                          paddingTop: 15,
+                                          maxWidth: "40%",
+                                          minWidth: "40%",
+                                          paddingBottom: 20,
+                                          justifyContent: "center",
+                                          marginTop: 5,
+                                          marginBottom: 5,
+                                        }}
+                                      >
+                                        More...
+                                      </RouteMenuButton>
+                                    )}
                                   </div>
                                 )}
-                              {playerDetailViewNum === 5 && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    flexFlow: "column",
-                                    maxHeight: 200,
-                                    maxWidth: "100%",
-                                    width: "100%",
-                                    overflowY: "scroll",
-                                    justifyContent: "flex-start",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  {searchResults && (
-                                    <SearchResultsList
-                                      searchResults={searchResults}
-                                      onClick={(uri) => {
-                                        playTrack(uri, tokenRef.current);
-                                      }}
-                                    />
-                                  )}
-                                </div>
-                              )}
-                              {(userLib || userPlaylists) &&
-                                playerDetailViewNum !== 1 && (
+                                {playerDetailViewNum === 3 && userPlaylists && (
                                   <div
                                     style={{
                                       display: "flex",
-                                      justifyContent: "center",
-                                      margin: 0,
-                                      marginTop: "6px",
+                                      flexFlow: "column",
+                                      maxHeight: 200,
+                                      maxWidth: "100%",
+                                      width: "100%",
+                                      overflowY: "scroll",
+                                      justifyContent: "flex-start",
+                                      alignItems: "center",
                                     }}
                                   >
-                                    <RouteMenuButton
-                                      noMove={true}
-                                      onClick={() => {
-                                        setPlayerDetailViewNum(1);
-                                      }}
-                                      style={{
-                                        color: "white",
-                                        marginBottom: 0,
-                                      }}
-                                    >
-                                      Library
-                                    </RouteMenuButton>
+                                    <Typography color="white" variant="h5">
+                                      Playlists
+                                      {playlistPagination && (
+                                        <span>
+                                          {playlistPagination.currentPage} /{" "}
+                                          {playlistPagination.totalPages}
+                                        </span>
+                                      )}
+                                    </Typography>
+                                    {userPlaylists?.previous &&
+                                      !fetchingLib && (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            fetchUserPlaylists(
+                                              userPlaylists.offset -
+                                                userPlaylists.limit
+                                            );
+                                          }}
+                                          key={"user-playlist-prev"}
+                                          style={{
+                                            color: "white",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            textOverflow: "ellipsis",
+                                            maxHeight: 100,
+                                            minHeight: 10,
+                                            paddingTop: 15,
+                                            maxWidth: "40%",
+                                            minWidth: "40%",
+                                            paddingBottom: 20,
+                                            marginTop: 5,
+                                            marginBottom: 5,
+                                          }}
+                                        >
+                                          Less...
+                                        </RouteMenuButton>
+                                      )}
+                                    {!fetchingLib &&
+                                      userPlaylists.items?.map((i) => (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            if (i.uri)
+                                              playPlaylist(
+                                                i.uri,
+                                                tokenRef.current
+                                              );
+                                          }}
+                                          key={"user-playlist-" + i.uri}
+                                          style={{
+                                            color: "white",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            textOverflow: "ellipsis",
+                                            textAlign: "left",
+                                            maxHeight: 100,
+                                            minHeight: 10,
+                                            paddingTop: 15,
+                                            maxWidth: "70%",
+                                            minWidth: "70%",
+                                            paddingBottom: 20,
+                                            paddingLeft: 20,
+                                            justifyContent: "flex-start",
+                                            marginTop: 5,
+                                            marginBottom: 5,
+                                          }}
+                                        >
+                                          {i.name}
+                                        </RouteMenuButton>
+                                      ))}
+                                    {userPlaylists?.previous &&
+                                      !fetchingLib && (
+                                        <RouteMenuButton
+                                          noMove={true}
+                                          onClick={() => {
+                                            fetchUserPlaylists(
+                                              userPlaylists.offset +
+                                                userPlaylists.limit
+                                            );
+                                          }}
+                                          key={"user-playlist-next"}
+                                          style={{
+                                            color: "white",
+                                            overflow: "hidden",
+                                            whiteSpace: "nowrap",
+                                            textOverflow: "ellipsis",
+                                            maxHeight: 100,
+                                            minHeight: 10,
+                                            paddingTop: 15,
+                                            maxWidth: "40%",
+                                            minWidth: "40%",
+                                            paddingBottom: 20,
+                                            marginTop: 5,
+                                            marginBottom: 5,
+                                          }}
+                                        >
+                                          More...
+                                        </RouteMenuButton>
+                                      )}
                                   </div>
                                 )}
-                            </>
-                          </AccordionDetails>
-                        </Accordion>
-                        {/* <button
+                                {playerDetailViewNum === 4 &&
+                                  nowPlayingAnalysis && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        flexFlow: "column",
+                                        maxHeight: 200,
+                                        maxWidth: "100%",
+                                        width: "100%",
+                                        overflowY: "scroll",
+                                        justifyContent: "flex-start",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <Typography color="white" variant="h5">
+                                        Analysis
+                                      </Typography>
+                                      <Typography
+                                        color="white"
+                                        sx={{ width: "100%", maxWidth: "100%" }}
+                                      >
+                                        {JSON.stringify(
+                                          nowPlayingAnalysis,
+                                          null,
+                                          2
+                                        )}
+                                      </Typography>
+                                    </div>
+                                  )}
+                                {playerDetailViewNum === 5 && (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexFlow: "column",
+                                      maxHeight: 200,
+                                      maxWidth: "100%",
+                                      width: "100%",
+                                      overflowY: "scroll",
+                                      justifyContent: "flex-start",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    {searchResults && (
+                                      <SearchResultsList
+                                        searchResults={searchResults}
+                                        onClick={(uri) => {
+                                          playTrack(uri, tokenRef.current);
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+                                {(userLib || userPlaylists) &&
+                                  playerDetailViewNum !== 1 && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        margin: 0,
+                                        marginTop: "6px",
+                                      }}
+                                    >
+                                      <RouteMenuButton
+                                        noMove={true}
+                                        onClick={() => {
+                                          setPlayerDetailViewNum(1);
+                                        }}
+                                        style={{
+                                          color: "white",
+                                          marginBottom: 0,
+                                        }}
+                                      >
+                                        Library
+                                      </RouteMenuButton>
+                                    </div>
+                                  )}
+                              </>
+                            </AccordionDetails>
+                          </Accordion>
+                          {/* <button
                           onClick={() => setArtOpen(!artOpen)}
                           style={{ position: "absolute", right: 12, top: 12 }}
                         >
                           Toggle
                         </button> */}
-                        <div
-                          id="controls-position-slider"
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <p>{formatMS(playerState.track.trackPosition)}</p>
-                          <input
-                            type="range"
-                            min={0}
-                            max={playerState.track.trackDuration}
-                            value={playerState.track.trackPosition}
+                          <div
+                            id="controls-position-slider"
                             onMouseDown={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              const targetMS = parseInt(e.target.value, 10);
-                              if (player) player.seek(targetMS);
-                            }}
-                            onPointerDown={(e) => e.stopPropagation()}
-                          />
-                          <p>{formatMS(playerState.track.trackDuration)}</p>
+                          >
+                            <p>{formatMS(playerState.track.trackPosition)}</p>
+                            <input
+                              type="range"
+                              min={0}
+                              max={playerState.track.trackDuration}
+                              value={playerState.track.trackPosition}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                const targetMS = parseInt(e.target.value, 10);
+                                if (player) player.seek(targetMS);
+                              }}
+                              onPointerDown={(e) => e.stopPropagation()}
+                            />
+                            <p>{formatMS(playerState.track.trackDuration)}</p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  <div
-                    id="controls-buttons"
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className="icon-button"
-                      onClick={() => player.previousTrack()}
-                      onPointerDown={(e) => e.stopPropagation()}
+                      )}
+                    <div
+                      id="controls-buttons"
                       onMouseDown={(e) => e.stopPropagation()}
-                      style={{
-                        opacity:
-                          !requestingTransfer && playbackTransferred ? 1 : 0,
-                        pointerEvents: playbackTransferred ? "inherit" : "none",
-                      }}
-                      disabled={!playbackTransferred}
                     >
-                      <SkipPreviousIcon />
-                    </button>
-                    <button
-                      className="icon-button"
-                      onClick={() => play()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      style={{
-                        opacity: !requestingTransfer ? 1 : 0,
-                        pointerEvents: !requestingTransfer ? "inherit" : "none",
-                      }}
-                      disabled={requestingTransfer}
-                    >
-                      {playerState.isPaused ? <PlayArrowIcon /> : <PauseIcon />}
-                    </button>
-                    <button
-                      className="icon-button"
-                      onClick={() => player.nextTrack()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      style={{
-                        opacity:
-                          !requestingTransfer && playbackTransferred ? 1 : 0,
-                        pointerEvents: playbackTransferred ? "inherit" : "none",
-                      }}
-                      disabled={!playbackTransferred}
-                    >
-                      <SkipNextIcon />
-                    </button>
+                      <button
+                        className="icon-button"
+                        onClick={() => player.previousTrack()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          opacity:
+                            !requestingTransfer && playbackTransferred ? 1 : 0,
+                          pointerEvents: playbackTransferred
+                            ? "inherit"
+                            : "none",
+                        }}
+                        disabled={!playbackTransferred}
+                      >
+                        <SkipPreviousIcon />
+                      </button>
+                      <button
+                        className="icon-button"
+                        onClick={() => play()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          opacity: !requestingTransfer ? 1 : 0,
+                          pointerEvents: !requestingTransfer
+                            ? "inherit"
+                            : "none",
+                        }}
+                        disabled={requestingTransfer}
+                      >
+                        {playerState.isPaused ? (
+                          <PlayArrowIcon />
+                        ) : (
+                          <PauseIcon />
+                        )}
+                      </button>
+                      <button
+                        className="icon-button"
+                        onClick={() => player.nextTrack()}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{
+                          opacity:
+                            !requestingTransfer && playbackTransferred ? 1 : 0,
+                          pointerEvents: playbackTransferred
+                            ? "inherit"
+                            : "none",
+                        }}
+                        disabled={!playbackTransferred}
+                      >
+                        <SkipNextIcon />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </Draggable>
-            </InactivityFader>
-          )}
-        </div>
+                </Draggable>
+              </InactivityFader>
+            )}
+          </div>
+          <InactivityFader>
+            <div
+              style={{
+                position: "absolute",
+                bottom: "8px",
+                right: "8px",
+                cursor: "pointer",
+                color: "white",
+                pointerEvents: "all",
+                zIndex: PLAYER_CONTROLS_ZINDEX + 10,
+              }}
+              onClick={() => {
+                localStorage.removeItem("refresh_token");
+                window.location.reload();
+              }}
+            >
+              <p style={{ margin: "0" }}>Sign out</p>
+            </div>
+          </InactivityFader>
+        </>
       )}
     </>
   );
