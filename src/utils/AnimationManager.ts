@@ -161,7 +161,7 @@ export default class AnimationManager {
 
   addOnAnimateListener(callback: (dtS: number) => void): string {
     const id = this.genID();
-    this._onAnimate.set(id, callback.bind(this));
+    this._onAnimate.set(id, callback);
     return id;
   }
 

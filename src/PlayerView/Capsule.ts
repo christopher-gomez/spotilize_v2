@@ -5,8 +5,8 @@ const SCALE = {
   MAX: 50.0,
 };
 const SPEED = {
-  MIN: 0.2,
-  MAX: 0.8,
+  MIN: 0.1,
+  MAX: 0.5,
 };
 const ALPHA = {
   MIN: 0.5,

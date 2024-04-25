@@ -228,11 +228,12 @@ export default () => {
         />
       )}
       {visualizer === "particles" && canLoadView && (
-        <Particles
-          canvas2D={undefined}
-          onWebGLUnavailable={undefined}
-          onSceneCreated={setBgLoaded(true)}
-        />
+        // <Particles
+        //   canvas2D={undefined}
+        //   onWebGLUnavailable={undefined}
+        //   onSceneCreated={setBgLoaded(true)}
+        // />
+        <></>
       )}
       {visualizer === "video" && canLoadView && <VideoCrossfader videos={[]} />}
       {visualizer === "capsules" && canLoadView && (

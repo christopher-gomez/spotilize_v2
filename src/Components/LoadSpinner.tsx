@@ -19,6 +19,25 @@ function getRandomEmoji() {
   return String.fromCodePoint(codePoint);
 }
 
+function getRandomMusicEmoji() {
+  const musicEmojiRanges = [
+    [0x1F3B5, 0x1F3B6], // Musical notes
+    [0x1F3BC, 0x1F3BC], // Musical score
+    [0x1F3A4, 0x1F3A4], // Microphone
+    [0x1F3A7, 0x1F3A7], // Headphone
+    [0x1F3B7, 0x1F3B8], // Musical instruments (Saxophone, Guitar)
+    [0x1F3BA, 0x1F3BB], // Musical instruments (Trumpet, Violin)
+  ];
+
+  // Select one range randomly
+  const range = musicEmojiRanges[Math.floor(Math.random() * musicEmojiRanges.length)];
+  // As some ranges contain only one emoji, adjust the calculation
+  const codePoint = range[0] === range[1] ? range[0] : Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+  // Convert the codepoint to a string/character
+  return String.fromCodePoint(codePoint);
+}
+
+
 export default ({
   loading,
   onToggled,
@@ -34,7 +53,7 @@ export default ({
   const [isLoadFadePauseFinished, setIsLoadFadePauseFinished] =
     React.useState(false);
 
-  const [emoji, setEmoji] = React.useState(getRandomEmoji());
+  const [emoji, setEmoji] = React.useState(getRandomMusicEmoji());
 
   React.useEffect(() => {
     if (!loading) {

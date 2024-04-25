@@ -275,8 +275,6 @@ export default ({
   const activeRef = React.useRef(active);
 
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const widthRef = React.useRef<number>();
-  const heightRef = React.useRef<number>();
 
   const ctxRef = React.useRef<CanvasRenderingContext2D | null>();
 
@@ -348,61 +346,6 @@ export default ({
   const normalize = (value, min, max) => (value - min) / (max - min);
 
   React.useEffect(() => {
-    const onToggle = (e) => {
-      // if (e.key === "Escape") {
-      //   setShowingInfo(!showingInfoRef.current);
-      // }
-    };
-
-    const handleResize = () => {
-      if (canvasRef.current) {
-        ctxRef.current = canvasRef.current.getContext("2d");
-
-        if (ctxRef.current === null) return;
-
-        const dpr = window.devicePixelRatio || 1;
-        const bsr =
-          //@ts-ignore
-          ctxRef.current.webkitBackingStorePixelRatio ||
-          //@ts-ignore
-          ctxRef.current.mozBackingStorePixelRatio ||
-          //@ts-ignore
-          ctxRef.current.msBackingStorePixelRatio ||
-          //@ts-ignore
-          ctxRef.current.oBackingStorePixelRatio ||
-          //@ts-ignore
-          ctxRef.current.backingStorePixelRatio ||
-          1;
-
-        const ratio = dpr / bsr;
-
-        canvasRef.current.width = window.innerWidth * ratio;
-        canvasRef.current.height = window.innerHeight * ratio;
-        canvasRef.current.style.width = `${window.innerWidth}px`;
-        canvasRef.current.style.height = `${window.innerHeight}px`;
-
-        ctxRef.current.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-        // Optionally, you can re-draw the scene here if needed
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    // Call the resize function to set the initial canvas size
-    handleResize();
-
-    window.addEventListener("keydown", onToggle);
-
-    return () => {
-      window.removeEventListener("keydown", onToggle);
-      window.removeEventListener("resize", handleResize);
-
-      if (animMan.current)
-        animMan.current.removeOnAnimateListener(animID.current!);
-    };
-  }, []);
-
-  React.useEffect(() => {
     if (capsules !== undefined) {
       capsulesRef.current = capsules;
 
@@ -412,15 +355,7 @@ export default ({
     }
   }, [capsules]);
 
-  const [animationManager, setAnimationManager] =
-    React.useState<AnimationManager>();
-  const animMan = React.useRef<AnimationManager>();
-
-  React.useEffect(() => {
-    animMan.current = animationManager;
-  }, [animationManager]);
-
-  const animID = React.useRef<string>();
+  const animID = React.useRef<number>();
 
   React.useEffect(() => {
     if (canvasRef.current) {
@@ -485,7 +420,12 @@ export default ({
       }
 
       setCapsules(capsules);
+      animID.current = window.requestAnimationFrame(update);
     }
+
+    return () => {
+      window.cancelAnimationFrame(animID.current!);
+    };
   }, [canvasRef.current]);
 
   React.useEffect(() => {
@@ -512,29 +452,65 @@ export default ({
 
   const trackAnalysisRef = React.useRef(trackAnalysis);
   React.useEffect(() => {
-    console.log("trackAnalysis", trackAnalysis);
     trackAnalysisRef.current = trackAnalysis;
   }, [trackAnalysis]);
 
-  const onEscapeDown = (e) => {
-    if (e.key === "Escape") {
-      setMenuShowing(!menuShowingRef.current);
-    }
-  };
-
   React.useEffect(() => {
+    const onEscapeDown = (e) => {
+      if (e.key === "Escape") {
+        setMenuShowing(!menuShowingRef.current);
+      }
+    };
+
     window.addEventListener("keydown", onEscapeDown);
 
-    if (!animationManager) {
-      const anim = new AnimationManager();
-      animID.current = anim.addOnAnimateListener(update);
-      setAnimationManager(anim);
-    }
+    const handleResize = () => {
+      if (canvasRef.current) {
+        ctxRef.current = canvasRef.current.getContext("2d");
+
+        if (ctxRef.current === null) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const bsr =
+          //@ts-ignore
+          ctxRef.current.webkitBackingStorePixelRatio ||
+          //@ts-ignore
+          ctxRef.current.mozBackingStorePixelRatio ||
+          //@ts-ignore
+          ctxRef.current.msBackingStorePixelRatio ||
+          //@ts-ignore
+          ctxRef.current.oBackingStorePixelRatio ||
+          //@ts-ignore
+          ctxRef.current.backingStorePixelRatio ||
+          1;
+
+        const ratio = dpr / bsr;
+
+        canvasRef.current.width = window.innerWidth * ratio;
+        canvasRef.current.height = window.innerHeight * ratio;
+        canvasRef.current.style.width = `${window.innerWidth}px`;
+        canvasRef.current.style.height = `${window.innerHeight}px`;
+
+        heightRef.current = canvasRef.current.height;
+        widthRef.current = canvasRef.current.width;
+
+        ctxRef.current.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+        // Optionally, you can re-draw the scene here if needed
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    // Call the resize function to set the initial canvas size
+    handleResize();
+
+    window.cancelAnimationFrame(animID.current!);
 
     return () => {
+      console.log("returniiiiing");
+      window.removeEventListener("resize", handleResize);
       window.removeEventListener("keydown", onEscapeDown);
-
-      if (animMan.current) animMan.current.clearOnAnimateListeners();
+      window.cancelAnimationFrame(animID.current!);
     };
   }, []);
 
@@ -576,6 +552,9 @@ export default ({
   }, [transparancyModifier, transparencyValue]);
 
   const currentLoudnessRef = React.useRef(0);
+
+  const widthRef = React.useRef<number>(0);
+  const heightRef = React.useRef<number>(0);
 
   const update = async () => {
     if (activeRef.current && ctxRef.current) {
@@ -776,17 +755,12 @@ export default ({
         });
       }
 
-      if (!canvasRef.current) {
-        console.log("No canvas");
-        return;
-      }
-
       // Clear the canvas
       ctxRef.current.clearRect(
         0,
         0,
-        canvasRef.current.offsetWidth * window.devicePixelRatio,
-        canvasRef.current.offsetHeight * window.devicePixelRatio
+        widthRef.current * window.devicePixelRatio,
+        heightRef.current * window.devicePixelRatio
       );
 
       // Draw the capsules
@@ -803,27 +777,27 @@ export default ({
         // recycle capsules
         if (
           capsule.y < 0 ||
-          capsule.y > canvasRef.current.height ||
+          capsule.y > heightRef.current ||
           capsule.x < 0 ||
-          capsule.x > canvasRef.current.width
+          capsule.x > widthRef.current
         ) {
           capsule.reset();
           if (capsule.y < 0) {
             // Exited from the top, reappear at the bottom
-            capsule.y = canvasRef.current.height;
-            capsule.x = Tools.random(0, canvasRef.current.width);
-          } else if (capsule.y > canvasRef.current.height) {
+            capsule.y = heightRef.current;
+            capsule.x = Tools.random(0, widthRef.current);
+          } else if (capsule.y > heightRef.current) {
             // Exited from the bottom, reappear at the top
             capsule.y = 0;
-            capsule.x = Tools.random(0, canvasRef.current.width);
+            capsule.x = Tools.random(0, widthRef.current);
           } else if (capsule.x < 0) {
             // Exited from the left, reappear on the right
-            capsule.x = canvasRef.current.width;
-            capsule.y = Tools.random(0, canvasRef.current.height);
-          } else if (capsule.x > canvasRef.current.width) {
+            capsule.x = widthRef.current;
+            capsule.y = Tools.random(0, heightRef.current);
+          } else if (capsule.x > widthRef.current) {
             // Exited from the right, reappear on the left
             capsule.x = 0;
-            capsule.y = Tools.random(0, canvasRef.current.height);
+            capsule.y = Tools.random(0, heightRef.current);
           }
         }
 
@@ -832,7 +806,9 @@ export default ({
         capsule.draw(ctxRef.current);
       }
     }
-
+    
+    if (canvasRef.current)
+      animID.current = window.requestAnimationFrame(update);
     // setInfo(JSON.stringify(capsulesRef.current, null, 3));
   };
 
@@ -1307,7 +1283,7 @@ export default ({
           ]}
         />
       )}
-      {animationManager && <FPSCounter animationManager={animationManager} />}
+      {/* {animationManager && <FPSCounter animationManager={animationManager} />} */}
       <canvas ref={canvasRef} style={{ height: "100%", width: "100%" }} />
     </>
   );
