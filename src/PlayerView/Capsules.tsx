@@ -74,7 +74,6 @@ export default ({
   player,
   numSegments = 50,
   numBeats = 50,
-  numTatums = 0,
   togglePlayerControls,
 }: {
   togglePlayerControls?: (toggled?: boolean) => void;
@@ -82,11 +81,9 @@ export default ({
   player?: ISpotifyPlayer;
   numSegments?: number;
   numBeats?: number;
-  numTatums?: number;
 }) => {
   const [sNumSegments, setSNumSegments] = React.useState(numSegments);
   const [sNumBeats, setSNumBeats] = React.useState(numBeats);
-  const [sNumTatums, setSNumTatums] = React.useState(numTatums);
 
   const [tatumsColor, setTatumsColor] = React.useState<"random" | string>(
     "random"
@@ -140,42 +137,6 @@ export default ({
   React.useEffect(() => {
     setSNumBeats(numBeats);
   }, [numBeats]);
-
-  React.useEffect(() => {
-    setSNumTatums(numTatums);
-  }, [numTatums]);
-
-  React.useEffect(() => {
-    // if (capsules !== undefined && capsules.length > 0) {
-    //   const tatumCapsules = capsules.filter((c) =>
-    //     c.data["feature"].includes("tatums")
-    //   );
-    //   if (tatumCapsules.length < sNumTatums) {
-    //     const newCapsules: Array<Capsule> = [];
-    //     for (let i = tatumCapsules.length; i < sNumTatums; i++) {
-    //       const capsule = createCapsule("tatums", "Tatum", tatumsColor);
-    //       if (capsule) newCapsules.push(capsule);
-    //     }
-    //     setCapsules([...capsules, ...newCapsules]);
-    //   } else if (tatumCapsules.length > sNumTatums) {
-    //     // Calculate how many capsules need to be removed
-    //     const numToRemove = tatumCapsules.length - sNumTatums;
-    //     // Filter out the capsules to remove
-    //     let removedCount = 0;
-    //     const updatedCapsules = capsules.filter((capsule) => {
-    //       if (
-    //         capsule.data["feature"].includes("tatums") &&
-    //         removedCount < numToRemove
-    //       ) {
-    //         removedCount++;
-    //         return false; // Exclude this capsule
-    //       }
-    //       return true; // Include this capsule
-    //     });
-    //     setCapsules(updatedCapsules);
-    //   }
-    // }
-  }, [sNumTatums]);
 
   React.useEffect(() => {
     if (capsules !== undefined && capsules.length > 0) {
@@ -326,19 +287,12 @@ export default ({
         });
         setPlayerEvent.current = true;
       }
-      // if (animMan.current)
-      //   animMan.current.removeOnAnimateListener(animID.current);
-
       const allTimbres = trackAnalysis.segments.flatMap((s) => s.timbre);
       const allLoudness = trackAnalysis.segments.flatMap((s) => s.loudness_max);
       minLoudness.current = Math.min(...allLoudness);
       maxLoudness.current = Math.max(...allLoudness);
       minTimbre.current = Math.min(...allTimbres);
       maxTimbre.current = Math.max(...allTimbres);
-
-      // if (animMan.current) {
-      //   animID.current = animMan.current.addOnAnimateListener(update);
-      // }
     }
   }, [trackAnalysis, player]);
 
@@ -348,8 +302,6 @@ export default ({
   React.useEffect(() => {
     if (capsules !== undefined) {
       capsulesRef.current = capsules;
-
-      console.log("capsulesRef.current", capsulesRef.current);
 
       setActive(true);
     }
@@ -406,40 +358,24 @@ export default ({
         const timbreIndex = i % 12;
         if (capsule) {
           capsule.data["timbre"] = timbreIndex;
-          // if (segmentIndex < trackAnalysis.segments.length) {
-          //   const segment = trackAnalysis.segments[segmentIndex];
-          //   const maxTimbre = Math.max(...segment.timbre);
-          //   const minTimbre = Math.min(...segment.timbre);
-          //   const normalizedTimbre = segment.timbre.map(
-          //     (value) => (value - minTimbre) / (maxTimbre - minTimbre)
-          //   );
-          // }
-
           capsules.push(capsule);
         }
       }
 
       setCapsules(capsules);
-      animID.current = window.requestAnimationFrame(update);
+      if (!calledUpdateRef.current) update();
+      calledUpdateRef.current = true;
     }
 
     return () => {
       window.cancelAnimationFrame(animID.current!);
+      calledUpdateRef.current = false;
     };
   }, [canvasRef.current]);
 
   React.useEffect(() => {
     activeRef.current = active;
   }, [active]);
-
-  // const [info, setInfo] = React.useState("");
-
-  // const [showingInfo, setShowingInfo] = React.useState(false);
-  // const showingInfoRef = React.useRef(showingInfo);
-
-  // React.useEffect(() => {
-  //   showingInfoRef.current = showingInfo;
-  // }, [showingInfo]);
 
   const [menuShowing, setMenuShowing] = React.useState(false);
   const menuShowingRef = React.useRef(menuShowing);
@@ -507,7 +443,6 @@ export default ({
     window.cancelAnimationFrame(animID.current!);
 
     return () => {
-      console.log("returniiiiing");
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("keydown", onEscapeDown);
       window.cancelAnimationFrame(animID.current!);
@@ -555,6 +490,7 @@ export default ({
 
   const widthRef = React.useRef<number>(0);
   const heightRef = React.useRef<number>(0);
+  const calledUpdateRef = React.useRef(false);
 
   const update = async () => {
     if (activeRef.current && ctxRef.current) {
@@ -592,6 +528,7 @@ export default ({
           "segments",
           currentTimeS
         );
+
         let shouldUpdateBeats =
           beatsAnalysis.current !== null &&
           !animatedFeatures.current
@@ -673,81 +610,6 @@ export default ({
             capsule.energy = combinedEnergy;
           }
         }
-
-        // analysisFeatures.forEach((feature) => {
-        //   let capsules: Array<Capsule>;
-        //   capsules = capsulesRef.current.filter((v) =>
-        //     (v.data["feature"] as Array<string>).includes(feature)
-        //   );
-
-        //   for (const capsule of capsules) {
-        //     // if (
-        //     //   feature === "tatums"
-        //     //   // &&
-        //     //   // current.confidence >= tatumConfidenceRef.current
-        //     // ) {
-        //     //   const energyFromLoudness = normalizedLoudness; // This is now a value between 0 and 1
-        //     //   const energyFromConfidence = currentTatumConfidence; // Assuming this is already between 0 and 1
-
-        //     //   // Combine the two energy contributions, you can tweak the blend to your liking
-        //     //   const combinedEnergy =
-        //     //     energyFromLoudness + energyFromConfidence;
-
-        //     //   capsule.data["shouldLerpEnergy"] = false;
-        //     //   capsule.energy = combinedEnergy;
-        //     // }
-
-        //     if (
-        //       feature === "beats"
-        //       // &&
-        //       // current.confidence >= beatConfidenceRef.current
-        //     ) {
-        //       const energyFromLoudness = normalizedLoudness; // This is now a value between 0 and 1
-        //       const energyFromConfidence = currentBeatConfidence; // Assuming this is already between 0 and 1
-
-        //       // Combine the two energy contributions, you can tweak the blend to your liking
-        //       const combinedEnergy = energyFromLoudness + energyFromConfidence;
-
-        //       // capsule.data["shouldLerpEnergy"] = false;
-        //       // capsule.energy = Tools.random(0.5, 1) * combinedEnergy;
-
-        //       capsule.data["shouldLerpEnergy"] = false;
-        //       capsule.energy = combinedEnergy;
-        //     }
-
-        //     if (
-        //       feature === "segments"
-        //       //  &&
-        //       // current.confidence >= segmentConfidenceRef.current
-        //     ) {
-        //       capsule.data["shouldLerpEnergy"] = false;
-
-        //       // if (transparancyModifierRef.current === "Dynamic") {
-        //       //   const normalizedLoudnessValue = Tools.normalize(
-        //       //     segment.loudness_max,
-        //       //     minLoudness.current,
-        //       //     maxLoudness.current,
-        //       //     0,
-        //       //     1
-        //       //   );
-
-        //       //   // capsule.transparency = normalizedLoudnessValue;
-        //       // }
-
-        //       const normalizedTimbreValue = Tools.normalize(
-        //         currentSegment.timbre[capsule.data["timbre"]],
-        //         minTimbre.current,
-        //         maxTimbre.current,
-        //         0,
-        //         currentSegment.confidence >= 0.15
-        //           ? Tools.random(1, 2.5)
-        //           : Tools.random(0.5, 1)
-        //       );
-
-        //       capsule.energy = normalizedTimbreValue;
-        //     }
-        //   }
-        // });
       } else if (!trackAnalysisRef.current || !player) {
         capsulesRef.current.forEach((c) => {
           c.data["shouldLerpEnergy"] = false;
@@ -806,10 +668,10 @@ export default ({
         capsule.draw(ctxRef.current);
       }
     }
-    
-    if (canvasRef.current)
+
+    if (canvasRef.current) {
       animID.current = window.requestAnimationFrame(update);
-    // setInfo(JSON.stringify(capsulesRef.current, null, 3));
+    }
   };
 
   return (

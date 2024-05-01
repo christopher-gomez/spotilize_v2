@@ -37,7 +37,7 @@ const App = () => {
     }
   };
 
-  React.useEffect(() => {
+  React.useEffect(() => {    
     if (window.spotifyPlayer) {
       window.addEventListener("loadstart", disconnectPlayer);
       window.addEventListener("beforeunload", disconnectPlayer);

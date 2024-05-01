@@ -172,7 +172,9 @@ void main() {
     float fadeFactor = clamp((distanceFromCamera - 10.0) / 10.0, 0.0, 1.0);
 
     // Compute point size
-    gl_PointSize = breath + (100.0 / size) * fadeFactor; // Adjust the 300.0 factor to scale the points
+    // gl_PointSize = breath + (300.0 / size) * fadeFactor; // Adjust the 300.0 factor to scale the points
+
+    gl_PointSize = size; // Adjust the 300.0 factor to scale the points
     gl_Position = projectionMatrix * modelViewMatrix * vec4(modPos, 1.0);
 }
 `;
@@ -218,6 +220,17 @@ void main() {
   canvas.height = size;
   const context = canvas.getContext("2d");
 
+  // context.fillStyle = "white";
+  // context.beginPath();
+  // context.arc(64, 64, 40, 0, 2 * Math.PI);
+  // context.fill();
+  // context.globalCompositeOperation = "copy";
+  // context.globalAlpha = 0.7;
+  // context.filter = "blur(16px)";
+  // context.beginPath();
+  // context.arc(64, 64, 40, 0, 2 * Math.PI);
+  // context.fill();
+
   // Create radial gradient
   const center = size / 2;
   // Create radial gradient with smoother transitions
@@ -242,7 +255,7 @@ void main() {
   var pointTex = new THREE.CanvasTexture(canvas);
   pointTex.minFilter = THREE.LinearFilter;
   pointTex.magFilter = THREE.LinearFilter;
-  //   pointTex.colorSpace = THREE.SRGBColorSpace;
+  pointTex.colorSpace = THREE.SRGBColorSpace;
 
   const N = 2000;
 
@@ -257,15 +270,15 @@ void main() {
 
   for (var i = 0; i < N; i++) {
     const theta = Math.random() * Math.PI * 2;
-		const u = Math.random() * 2 - 1;
-		const c = Math.sqrt( 1 - u * u );
+    const u = Math.random() * 2 - 1;
+    const c = Math.sqrt(1 - u * u);
 
-		v.x = c * Math.cos( theta );
-		v.y = u;
-		v.z = c * Math.sin( theta );
+    v.x = c * Math.cos(theta);
+    v.y = u;
+    v.z = c * Math.sin(theta);
 
     v.setLength(10 * Math.pow(Math.random(), 1));
-    position.setXYZ(i, v.x, 0, v.z);
+    position.setXYZ(i, v.x, 0, v.z / 10);
     // position.setZ(i, Math.min(camera.position.z + 5, position.getZ(i)));
 
     const hue = (baseHue + colorVariation * Math.random()) % 1.0;

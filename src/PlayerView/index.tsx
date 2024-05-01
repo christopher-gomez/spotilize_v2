@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import RoutesView from "../Components/RoutesView.tsx";
 import LoadSpinner from "../Components/LoadSpinner.tsx";
-import AnimationManager from "../utils/AnimationManager.ts";
 import { SpotifyAudioAnalysisResponse } from "../Spotify/index.ts";
 import SpotifyPlayer, {
   ISpotifyPlayer,
@@ -17,7 +16,7 @@ import VideoCrossfader from "./VideoCrossfader.tsx";
 import Capsules from "./Capsules.tsx";
 // import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import InactivityFader from "../Components/InactivityFader.tsx";
-import Particles from "./WebGL/Particles";
+import Particles from "./WebGL/Particles/ParticlesComponent.jsx";
 import Koi from "./WebGL/Koi/index.tsx";
 
 export default () => {
@@ -141,16 +140,6 @@ export default () => {
     setShouldRenderControls(!shouldRenderMenus);
   }, [shouldRenderMenus]);
 
-  const [animManager, setAnimManager] = React.useState<AnimationManager | null>(
-    null
-  );
-
-  useEffect(() => {
-    if (animManager) {
-      setBgLoaded(true);
-    }
-  }, [animManager]);
-
   const [currentAnalysis, setCurrentAnalysis] =
     useState<SpotifyAudioAnalysisResponse>(null);
   const currentAnalysisRef = useRef<SpotifyAudioAnalysisResponse>(null);
@@ -166,7 +155,7 @@ export default () => {
 
   const [visualizer, setVisualizer] = useState<
     "shader" | "video" | "capsules" | "particles" | "koi"
-  >("capsules");
+  >("particles");
   const envTypeChangedTORef = useRef<number | undefined>();
   const [canLoadView, setCanLoadView] = useState(false);
 
@@ -228,12 +217,14 @@ export default () => {
         />
       )}
       {visualizer === "particles" && canLoadView && (
-        // <Particles
-        //   canvas2D={undefined}
-        //   onWebGLUnavailable={undefined}
-        //   onSceneCreated={setBgLoaded(true)}
-        // />
-        <></>
+        <Particles
+          onSceneCreated={() => setBgLoaded(true)}
+          canvas2D={undefined}
+          player={player!}
+          trackAnalysis={currentAnalysis}
+          // onWebGLUnavailable={undefined}
+        />
+        // <></>
       )}
       {visualizer === "video" && canLoadView && <VideoCrossfader videos={[]} />}
       {visualizer === "capsules" && canLoadView && (
@@ -305,7 +296,7 @@ export default () => {
               bottom: 0,
               left: 0,
               right: 0,
-              pointerEvents: bgLoaded ? "all" : "none",
+              pointerEvents: "none",
               opacity: bgLoaded && playerReady ? 1 : 0,
             }}
           >
@@ -337,7 +328,7 @@ export default () => {
             className="cloud-player container"
             style={{
               zIndex: 1,
-              pointerEvents: bgLoaded ? "all" : "none",
+              pointerEvents: "none",
               opacity: bgLoaded ? 1 : 0,
             }}
           >
@@ -348,6 +339,7 @@ export default () => {
                 position: "absolute",
                 top: "2em",
                 flexFlow: "column",
+                zIndex: PLAYER_CONTROLS_ZINDEX + 2,
               }}
             >
               <div className="track-info-text">

@@ -34,7 +34,6 @@ import LockIcon from "@mui/icons-material/Lock";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import "./PlayerComponent.css";
 import SearchResultsList from "./SearchResultsList.tsx";
-import AnimationManager from "../utils/AnimationManager.ts";
 import InactivityFader from "../Components/InactivityFader.tsx";
 
 export const PLAYER_CONTROLS_ZINDEX = 999999;
@@ -271,7 +270,8 @@ export const SpotifyPlayer = ({
 
     return () => {
       setFirstTrackPlayed(false);
-      animMan.current?.clearOnAnimateListeners();
+      window.cancelAnimationFrame(animRef.current!);
+      // animMan.current?.clearOnAnimateListeners();
     };
   }, [player]);
 
@@ -296,7 +296,14 @@ export const SpotifyPlayer = ({
   const firstTrackPlayedRef = useRef(firstTrackPlayed);
   const shouldQueryState = React.useRef(true);
   const gettingCurrentState = React.useRef(false);
-  const animMan = useRef<AnimationManager | null>(null);
+  // const animMan = useRef<AnimationManager | null>(null);
+
+  const update = () => {
+    queryState();
+
+    if (playerRef.current)
+      animRef.current = window.requestAnimationFrame(update);
+  };
 
   const queryState = (state?: PlayerState | null) => {
     if (gettingCurrentState.current) {
@@ -329,12 +336,135 @@ export const SpotifyPlayer = ({
     }
   };
 
+  // const processTrackAnalyzation = async () => {
+  //     let paused = true;
+  //     if (player) {
+  //       paused = (await player.getCurrentState())?.paused ?? true;
+  //     }
+
+  //     if (player && !paused) {
+  //       const state = await player.getCurrentState();
+
+  //       if (!state) return;
+
+  //       const currentTimeS = state.position / 1000;
+
+  //       let currentLoudness = 0;
+  //       // let currentTatumConfidence = 0;
+  //       let currentBeatConfidence = 0;
+
+  //       if (!animatedFeatures.current.has("beats")) {
+  //         animatedFeatures.current.set("beats", []);
+  //       }
+
+  //       if (!animatedFeatures.current.has("segments")) {
+  //         animatedFeatures.current.set("segments", []);
+  //       }
+
+  //       const beatsAnalysis = findCurrentPropertyFromTime(
+  //         trackAnalysisRef.current,
+  //         "beats",
+  //         currentTimeS
+  //       );
+  //       const segmentAnalysis = findCurrentPropertyFromTime(
+  //         trackAnalysisRef.current,
+  //         "segments",
+  //         currentTimeS
+  //       );
+
+  //       let shouldUpdateBeats =
+  //         beatsAnalysis.current !== null &&
+  //         !animatedFeatures.current
+  //           .get("beats")
+  //           ?.find((f) => f.index === beatsAnalysis.index);
+
+  //       let shouldUpdateSegments =
+  //         segmentAnalysis.current !== null &&
+  //         !animatedFeatures.current
+  //           .get("segments")
+  //           ?.find((f) => f.index === segmentAnalysis.index);
+  //       let currentSegment: SpotifyAudioAnalysisSegment;
+
+  //       if (shouldUpdateSegments) {
+  //         animatedFeatures.current
+  //           .get("segments")!
+  //           .push({ index: segmentAnalysis.index, time: currentTimeS });
+
+  //         currentSegment =
+  //           segmentAnalysis.current as SpotifyAudioAnalysisSegment;
+  //         currentLoudness = currentSegment.loudness_max;
+  //         currentLoudnessRef.current = currentLoudness;
+
+  //         const normalizedLoudness = normalize(
+  //           currentLoudness,
+  //           minLoudness.current,
+  //           maxLoudness.current
+  //         );
+
+  //         const scapsules = capsulesRef.current.filter((v) =>
+  //           (v.data["feature"] as Array<string>).includes("segments")
+  //         );
+
+  //         for (const capsule of scapsules) {
+  //           capsule.data["shouldLerpEnergy"] = false;
+
+  //           const normalizedTimbreValue = normalize(
+  //             currentSegment.timbre[capsule.data["timbre"]],
+  //             minTimbre.current,
+  //             maxTimbre.current
+  //           );
+
+  //           capsule.energy =
+  //             (normalizedLoudness + normalizedTimbreValue) *
+  //             currentSegment.confidence;
+  //         }
+  //       } else {
+  //         currentLoudness = currentLoudnessRef.current;
+  //       }
+
+  //       if (shouldUpdateBeats) {
+  //         animatedFeatures.current
+  //           .get("beats")!
+  //           .push({ index: beatsAnalysis.index, time: currentTimeS });
+
+  //         currentBeatConfidence = beatsAnalysis.current!.confidence;
+
+  //         const normalizedLoudness = normalize(
+  //           currentLoudness,
+  //           minLoudness.current,
+  //           maxLoudness.current
+  //         );
+
+  //         const bcapsules = capsulesRef.current.filter((v) =>
+  //           (v.data["feature"] as Array<string>).includes("beats")
+  //         );
+
+  //         for (const capsule of bcapsules) {
+  //           const energyFromLoudness = normalizedLoudness; // This is now a value between 0 and 1
+  //           const energyFromConfidence = currentBeatConfidence; // Assuming this is already between 0 and 1
+
+  //           // Combine the two energy contributions, you can tweak the blend to your liking
+  //           const combinedEnergy = energyFromLoudness + energyFromConfidence;
+
+  //           // capsule.data["shouldLerpEnergy"] = false;
+  //           // capsule.energy = Tools.random(0.5, 1) * combinedEnergy;
+
+  //           capsule.data["shouldLerpEnergy"] = false;
+  //           capsule.energy = combinedEnergy;
+  //         }
+  //       }
+  //     }
+  // }
+
+  const animRef = useRef<number>();
   useEffect(() => {
     if (firstTrackPlayed) {
-      if (!animMan.current) animMan.current = new AnimationManager();
+      // if (!animMan.current) animMan.current = new AnimationManager();
 
       // animMan.current.clearOnAnimateListeners();
-      animMan.current.addOnAnimateListener(() => queryState());
+
+      update();
+      // animMan.current.addOnAnimateListener(() => queryState());
     }
 
     firstTrackPlayedRef.current = firstTrackPlayed;
@@ -343,11 +473,19 @@ export const SpotifyPlayer = ({
       if (firstTrackPlayed) {
         shouldQueryState.current = false;
       }
+
+      window.cancelAnimationFrame(animRef.current!);
     };
   }, [firstTrackPlayed]);
 
   const [nowPlayingAnalysis, setNowPlayingAnalysis] =
     useState<SpotifyAudioAnalysisResponse>(null);
+
+  const trackAnalysisRef = useRef(nowPlayingAnalysis);
+
+  useEffect(() => {
+    trackAnalysisRef.current = nowPlayingAnalysis;
+  }, [nowPlayingAnalysis]);
 
   const [currentTrack, setCurrentTrack] = useState<string | null>(null);
   const currentTrackRef = useRef(currentTrack);
@@ -592,11 +730,12 @@ export const SpotifyPlayer = ({
     window.addEventListener("resize", handleResize);
 
     return () => {
-      animMan.current?.clearOnAnimateListeners();
+      // animMan.current?.clearOnAnimateListeners();
       // window.removeEventListener("mousemove", onDocMouseMove);
       window.removeEventListener("resize", handleResize);
       setFetchingAnalysis(false);
       disconnectPlayer();
+      window.cancelAnimationFrame(animRef.current!);
     };
   }, []);
 

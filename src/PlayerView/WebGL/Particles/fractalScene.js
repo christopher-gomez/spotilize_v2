@@ -1,15 +1,21 @@
 import * as THREE from "three";
-import { CreateParticles } from "./particles";
-// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { CreateParticles } from "./particles.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
-import fractalShader from "./fractalShader";
+import fractalShader from "./fractalShader.js";
 // import floorDiffuse from "../../../../Assets/Textures/Hardwood/hardwood2_diffuse.jpg";
 // import floorBump from "../../../../Assets/Textures/Hardwood/hardwood2_bump.jpg";
 // import floorRoughness from "../../../../Assets/Textures/Hardwood/hardwood2_roughness.jpg";
 import { createNoise3D } from "simplex-noise";
+import { ISpotifyPlayer } from "../../../Spotify/PlayerComponent.tsx";
+import {
+  SpotifyAudioAnalysisResponse,
+  findCurrentPropertyFromTime,
+} from "../../../Spotify/index.ts";
+import Tools from "../../../utils/Tools.js";
 
 var ENTIRE_SCENE = 0,
   BLOOM_SCENE = 1;
@@ -40,14 +46,160 @@ export default class Scene {
     }
   }
 
+  constructor() {
+    this.noise3D = createNoise3D(Math.random);
+  }
+
   /**
    *
-   * @param {HTMLCanvasElement} canvas2D
-   * @param {HTMLCanvasElement} canvas3D
-   * @param {(canvas: HTMLCanvasElement) => void} onSceneCreated
+   * @type {ISpotifyPlayer}
    */
-  constructor() {
-    this.noise3D = createNoise3D(Math.random());
+  player = null;
+  active = false;
+
+  /**
+   *
+   * @type {SpotifyAudioAnalysisResponse}
+   */
+  trackAnalysis = null;
+  currentLoudness = 0;
+
+  async updateWithAnalyzation() {
+    if (this.active) {
+      let paused = true;
+      if (this.player) {
+        paused = (await this.player.getCurrentState())?.paused ?? true;
+      }
+
+      if (this.trackAnalysis && this.player && !paused) {
+        const state = await this.player.getCurrentState();
+
+        if (!state) return;
+
+        const currentTimeS = state.position / 1000;
+
+        let currentLoudness = 0;
+        // let currentTatumConfidence = 0;
+        let currentBeatConfidence = 0;
+
+        // if (!animatedFeatures.current.has("beats")) {
+        //   animatedFeatures.current.set("beats", []);
+        // }
+
+        // if (!animatedFeatures.current.has("segments")) {
+        //   animatedFeatures.current.set("segments", []);
+        // }
+
+        const beatsAnalysis = findCurrentPropertyFromTime(
+          this.trackAnalysis,
+          "beats",
+          currentTimeS
+        );
+        const segmentAnalysis = findCurrentPropertyFromTime(
+          this.trackAnalysis,
+          "segments",
+          currentTimeS
+        );
+
+        let shouldUpdateBeats = beatsAnalysis.current !== null;
+        //  &&
+        // !animatedFeatures.current
+        //   .get("beats")
+        //   ?.find((f) => f.index === beatsAnalysis.index);
+
+        let shouldUpdateSegments = segmentAnalysis.current !== null;
+        //  &&
+        // !animatedFeatures.current
+        //   .get("segments")
+        //   ?.find((f) => f.index === segmentAnalysis.index);
+        let currentSegment;
+
+        if (shouldUpdateSegments) {
+          // animatedFeatures.current
+          //   .get("segments")!
+          //   .push({ index: segmentAnalysis.index, time: currentTimeS });
+
+          currentSegment = segmentAnalysis.current;
+          currentLoudness = currentSegment.loudness_max;
+          this.currentLoudness = currentLoudness;
+          // currentLoudnessRef.current = currentLoudness;
+
+          // const normalizedLoudness = normalize(
+          //   currentLoudness,
+          //   minLoudness.current,
+          //   maxLoudness.current
+          // );
+
+          // const scapsules = capsulesRef.current.filter((v) =>
+          //   (v.data["feature"] as Array<string>).includes("segments")
+          // );
+
+          // for (const capsule of scapsules) {
+          //   capsule.data["shouldLerpEnergy"] = false;
+
+          //   const normalizedTimbreValue = normalize(
+          //     currentSegment.timbre[capsule.data["timbre"]],
+          //     minTimbre.current,
+          //     maxTimbre.current
+          //   );
+
+          //   capsule.energy =
+          //     (normalizedLoudness + normalizedTimbreValue) *
+          //     currentSegment.confidence;
+          // }
+        } else {
+          currentLoudness = this.currentLoudness;
+        }
+
+        if (shouldUpdateBeats) {
+          currentBeatConfidence = beatsAnalysis.current.confidence;
+
+          if (this.particles) {
+            this.particles.material.uniforms.uBeatIntensity.value =
+              currentBeatConfidence * 100;
+          }
+
+          // const normalizedLoudness = normalize(
+          //   currentLoudness,
+          //   minLoudness.current,
+          //   maxLoudness.current
+          // );
+
+          // const bcapsules = capsulesRef.current.filter((v) =>
+          //   (v.data["feature"] as Array<string>).includes("beats")
+          // );
+        } else {
+          if (this.particles) {
+            this.particles.material.uniforms.uBeatIntensity.value =
+              Tools.lerpFactor(
+                this.particles.material.uniforms.uBeatIntensity.value,
+                0,
+                0.1
+              );
+          }
+        }
+      } else {
+        console.log('paused')
+        if (this.particles) {
+          this.particles.material.uniforms.uBeatIntensity.value =
+            Tools.lerpFactor(
+              this.particles.material.uniforms.uBeatIntensity.value,
+              0,
+              0.1
+            );
+        }
+      }
+    }
+  }
+
+  setTrackAnalysis(analysis) {
+    this.trackAnalysis = analysis;
+
+    if(this.trackAnalysis) {
+      this.active = true;
+    } else {
+      this.active = false;
+    }
   }
 
   /**
@@ -55,10 +207,12 @@ export default class Scene {
    * @param {HTMLCanvasElement} canvas2D
    * @param {HTMLCanvasElement} canvas3D
    * @param {(canvas: HTMLCanvasElement) => void} onSceneCreated
+   * @param {ISpotifyPlayer} spotifyPlayer
    */
-  initScene(canvas2D, canvas3D, onSceneCreated) {
+  initScene(canvas2D, canvas3D, onSceneCreated, spotifyPlayer) {
     this.dispose();
 
+    this.player = spotifyPlayer;
     this.clock = new THREE.Clock();
 
     let texture;
@@ -93,9 +247,9 @@ export default class Scene {
     renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer = renderer;
 
-    // this.orbitControls = new OrbitControls(camera, renderer.domElement);
+    this.orbitControls = new OrbitControls(camera, renderer.domElement);
 
-    // if (this.useOrbitControls) this.orbitControls.update();
+    if (this.useOrbitControls) this.orbitControls.update();
 
     const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x0f0e0d, 0.02);
     scene.add(hemiLight);
@@ -128,7 +282,7 @@ export default class Scene {
 
     for (let i = -3; i < 4; i += 3) {
       const pLight = new THREE.PointLight(0xffffff, 1, 100, 2);
-      pLight.position.set(i, 0, 5);
+      pLight.position.set(i, 0, 7);
       // pLight.add(new THREE.Mesh(bulbGeometry, bulbMat));
       pLight.castShadow = true;
       pLight.userData.originalX = pLight.position.x;
@@ -227,7 +381,7 @@ export default class Scene {
     floorMesh.receiveShadow = true;
     floorMesh.rotation.x = -Math.PI / 2.0;
     floorMesh.position.setY(-1.0);
-    // scene.add(floorMesh);
+    scene.add(floorMesh);
 
     // point cloud
 
@@ -246,7 +400,7 @@ export default class Scene {
     // this.particles.userData.isBloomTarget = true;
     // this.particles.renderOrder = 0;
 
-    // this.particles.layers.enable(BLOOM_SCENE);
+    this.particles.layers.enable(BLOOM_SCENE);
     scene.add(this.particles);
 
     let material, geometry, mesh;
@@ -383,11 +537,15 @@ export default class Scene {
 
     if (!this.shouldRender) return;
 
+    this.updateWithAnalyzation();
+
     // const elapsedTime = clockRef.current.getElapsedTime();
 
     const msTime = this.clock.getElapsedTime();
 
-    time = time / 1000;
+    // time = time / 1000;
+
+    time = msTime;
 
     // if (this.camera) {
     //   let lerpFactor = elapsedTime / 15;
@@ -418,8 +576,8 @@ export default class Scene {
     if (this.particles) {
       this.particles.material.uniforms.uElapsedTime.value = time;
       this.particles.material.uniforms.uTime.value = time;
-      this.particles.material.uniforms.cameraPosition.value =
-        this.camera.position.clone();
+      // this.particles.material.uniforms.cameraPosition.value =
+      //   this.camera.position.clone();
       // pointsRef.current.material.uniforms.cameraPosition.value = this.camera.position.clone();
     }
 
@@ -494,7 +652,6 @@ export default class Scene {
       this.scene &&
       this.camera
     ) {
-      console.log("rendering");
       this.renderer.render(this.scene, this.camera);
     }
 
@@ -602,6 +759,8 @@ export default class Scene {
 
     this.finalComposer.setSize(window.innerWidth, window.innerHeight);
     this.bloomComposer.setSize(window.innerWidth, window.innerHeight);
+
+    if (!this.fractalMesh) return;
 
     this._scaleFractal();
 
